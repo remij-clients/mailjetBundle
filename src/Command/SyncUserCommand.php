@@ -62,7 +62,7 @@ class SyncUserCommand extends Command
     /**
      * {@inheritDoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         foreach ($this->lists as $listId => $listParameters) {
             $provider = $this->getProvider($listParameters['contact_provider']);
@@ -92,6 +92,8 @@ class SyncUserCommand extends Command
 
             $output->writeln(sprintf('<info>OK listId: %s, see logs in Mailjet List</info>', $listId));
         }
+
+        return Command::SUCCESS;
     }
 
     /**
@@ -127,9 +129,9 @@ class SyncUserCommand extends Command
             $batch = $this->synchronizer->getJob($listId, $jobId);
             // We need to array merge because Mailjet API doesn't send jobid in response.
             if ($batch[0]['Status'] == 'Error') {
-                array_push($batchesError, array_merge(['JobID' => $jobId], $batch[0]));
+                $batchesError[] = array_merge(['JobID' => $jobId], $batch[0]);
             } else {
-                array_push($refreshedBatchsResults, array_merge(['JobID' => $jobId], $batch[0]));
+                $refreshedBatchsResults[] = array_merge(['JobID' => $jobId], $batch[0]);
             }
         }
         return $refreshedBatchsResults;
@@ -174,7 +176,7 @@ class SyncUserCommand extends Command
         $output = [];
         foreach ($batchesError as $key => $batch) {
             $errors = $this->synchronizer->getJobJsonError($batch['JobID']);
-            array_push($output, '<error><pre>'.print_r($errors).'</pre></error>');
+            $output[] = '<error><pre>' . print_r($errors) . '</pre></error>';
         }
 
         return $output;
